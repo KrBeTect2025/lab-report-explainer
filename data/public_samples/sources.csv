@@ -1,0 +1,5 @@
+id,lab,url,terms_checked,notes
+drlal_wm17s,Dr Lal PathLabs,https://cdn1.lalpathlabs.com/live/reports/WM17S.pdf,no,Dummy patient; CBC lipid thyroid HbA1c; some values are chart images; odd units are intentional test traps
+drlal_z615,Dr Lal PathLabs,https://cdn1.lalpathlabs.com/live/reports/Z615.pdf,no,Dummy patient; mostly blank results; layout only
+hod_pk0016,HOD,https://images.hod.care/web/sample-report/PK0016.pdf,no,Demo patient; 13 pages; urine and imaging first; CBC likely page 6
+drlogy_thyroid,Drlogy,https://images.drlogy.com/assets/uploads/lab/pdf/Normal-Thyroid-profile-test-report-format-example-sample-template-Drlogy-lab-report.pdf,no,Vendor template; layout only; never show the printed name publicly

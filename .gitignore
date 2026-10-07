@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+.pytest_cache/
+.env
+# private or third-party data never goes to a public repo
+data/real_samples/
+data/public_samples/pdf/
+data/public_samples/answer_keys/
+data/synthetic/
+data/store/
