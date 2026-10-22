@@ -24,6 +24,19 @@ name, value, unit, range_text, computed_flag (plain code), reported_flag (H/L if
 printed one), flag_mismatch, unit_check (ok / unexpected / unchecked), page, raw.
 Lines that look like results but cannot be parsed are returned in `unparsed`.
 
+## Explanations (LLM part)
+Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY` and `CLAUDE_MODEL`. Then
+`POST /reports/{token}/explain` asks Claude for a plain-English explanation of each row.
+
+- Only the test name, value, unit, printed range and code-computed flag are sent. Never
+  the file, names, ages, IDs or the raw report lines.
+- Code checks every sentence before it is shown: each number must be that row's value or
+  a number from its printed range, the unit must match, the low / normal / high words must
+  match the code flag, and every low or high value must end with "please discuss this
+  with your doctor". If the check fails twice, no text is shown, only the values table.
+- "Likely causes" are not generated yet. When they are, they will not be verifiable
+  against the report, and this README will say so.
+
 ## Known limits
 - Digital PDFs only. Photos and scans need the OpenCV + OCR path (not built yet).
 - One test per line. Side-by-side two-column layouts are not handled.

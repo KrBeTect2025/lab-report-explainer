@@ -181,3 +181,4 @@ Notes:
 
 - 2026-10-07: Consented real reports are paused. Development and evaluation use synthetic reports and public samples only. Real reports may be added later; until then no claim of accuracy on real reports is made.
 - 2026-10-07: Public samples count as development files, so draft answer keys generated from extraction are allowed for them. The owner checks every line against the PDF.
+- 2026-10-22: Task 6. The verifier checks each sentence against its own row, not against all rows, so a number copied from another test is rejected. The v1 English prompt has no "likely causes"; causes come with task 7 and its own checks, because cause wording (for example "low fluid intake" on a high value) would trip the flag-word check. An explanation is refused (HTTP 409) while any row still waits for review, instead of silently leaving that row out. Explanations are not stored yet; that is decided with PDF output (task 9).

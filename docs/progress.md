@@ -1,6 +1,6 @@
 # Progress report
 
-As of 2026-10-07.
+As of 2026-10-22.
 
 ## Summary
 
@@ -22,7 +22,7 @@ so no claim about real-world accuracy can be made.
 | 3 | Score samples with hand-checked keys | Deferred | Skipped by the owner; no accuracy numbers |
 | 4 | Report schema and confirmation step | Done | Accept, correct, reject over the API; flags recomputed by code |
 | 5 | FastAPI skeleton with 24-hour deletion | Done | Upload, review rows, get by token, delete; expiry proven by tests |
-| 6 | LLM client, English prompt, code verifier | Not started | Next |
+| 6 | LLM client, English prompt, code verifier | Done (mocked) | 23 of 23 wrong sentences rejected, 9 of 9 correct accepted; never run on the live API |
 | 7 | Narrow LLM check and cause-text rules | Not started | |
 | 8 | Hindi, then Hinglish | Not started | Needs a native Hindi reviewer |
 | 9 | PDF output, consent screen, deployment | Not started | API already requires consent |
@@ -101,14 +101,23 @@ PDFs returned nothing silently, no disclaimer in responses, no page limit.
 
 ## Next steps
 
-- [ ] Task 6a: LLM client wrapper. Official `anthropic` SDK, model from `CLAUDE_MODEL`, key from `.env`, mocked in every test.
-- [ ] Task 6b: `prompts/explain_en_v1.md`. Plain English, hedged wording, "please discuss this with your doctor" on every abnormal value. Sees only usable rows.
-- [ ] Task 6c: code verifier, layer 1. Every number, unit and flag word must match the report. Acceptance: `tests/verifier_cases.json`, wrong sentences rejected 100%, correct ones accepted.
-- [ ] Task 6d: fallback. Failed verification retries once, then shows only the values table with code flags and the disclaimer.
+- [x] Task 6a: LLM client wrapper. Official `anthropic` SDK, model from `CLAUDE_MODEL`, key from `.env`, mocked in every test.
+- [x] Task 6b: `prompts/explain_en_v1.md`. Plain English, hedged wording, "please discuss this with your doctor" on every abnormal value. Sees only usable rows.
+- [x] Task 6c: code verifier, layer 1. Every number, unit and flag word must match the report. Acceptance: `tests/verifier_cases.json`, wrong sentences rejected 100%, correct ones accepted.
+- [x] Task 6d: fallback. Failed verification retries once, then shows only the values table with code flags and the disclaimer.
 - [ ] (owner) Add `ANTHROPIC_API_KEY` and `CLAUDE_MODEL` to `.env` before the first live run.
 - [ ] Task 7: narrow LLM safety check and cause-text rules, with a test file of unsafe sentences that must be rejected.
 - [ ] (owner, when ready) Task 3: check the two draft keys, set `verified` to true, run evaluate.
 - [ ] (owner, before task 8) Find a native Hindi reviewer.
+
+## Task 6 notes (2026-10-22)
+
+- The verifier checks each sentence against its own row, so a number from another test is
+  rejected even though it exists on the report.
+- `POST /reports/{token}/explain` returns 409 while rows wait for review, and 503 when
+  `.env` has no `CLAUDE_MODEL`.
+- Unproven: how often a real model passes the verifier on the first try. Needs one live
+  run with a key.
 
 ## How to run the demo
 

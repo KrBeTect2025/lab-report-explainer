@@ -6,3 +6,5 @@ fastapi
 python-multipart
 uvicorn
 httpx
+anthropic
+python-dotenv
