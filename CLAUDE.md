@@ -105,7 +105,12 @@ data/public_samples/       sources.csv; pdf/ is git-ignored
 data/real_samples/         owner's consented, redacted reports; git-ignored
 tests/                     pytest
 app/api/                   FastAPI app and 24-hour store (done)
-(planned) app/llm/  app/verify/  prompts/  glossary/
+app/llm/client.py          Claude API wrapper; model from CLAUDE_MODEL (done)
+app/llm/explain.py         rows -> LLM -> verifier -> text or fallback table (done)
+app/verify/facts.py        verifier layer 1, plain code (done)
+prompts/explain_en_v1.md   English explanation prompt, no causes yet (done)
+tests/verifier_cases.json  wrong and correct sentences for the verifier (done)
+(planned) glossary/  verifier layer 2
 ```
 
 Row fields: name, value, unit, range_text, computed_flag, reported_flag, flag_mismatch,
@@ -159,9 +164,9 @@ for the owner. Never leave placeholder file names in commands.
   Excluded: the Sterling Accuris sample (shows a full name and date of birth) and anything
   from document-sharing sites such as Scribd.
 
-## 10. Current status (2026-10-07)
+## 10. Current status (2026-10-22)
 
-Done and tested (52 tests pass): coordinate-based PDF row extraction with header-driven
+Done and tested (103 tests pass): coordinate-based PDF row extraction with header-driven
 columns (including a Method column) and a pattern fallback; rotated watermark text removed;
 symbol-font (U+F0xx) pages decoded, their rows marked low confidence; word flags after the
 value (High / Low / Normal); range parsing including Indian digit grouping (1,50,000);
@@ -179,6 +184,16 @@ structured values are stored, in STORE_DIR (default data/store, git-ignored), fo
 Expiry is checked on every read and by an hourly cleanup loop. POST
 /reports/{token}/rows/{index} accepts, rejects or corrects a row. Every response carries the
 disclaimer (draft wording). 30-page limit. Scanned PDFs report `no_text_layer`.
+Task 6 done (2026-10-22), mocked only: `app/llm/client.py` (official `anthropic` SDK, model
+from CLAUDE_MODEL, key from `.env`, JSON output schema; refusal or max_tokens is an error).
+`app/llm/explain.py` sends only id, name, value, unit, range, flag of usable rows; parses
+the JSON answer; runs the verifier; retries once; then returns status "fallback" with only
+the values table. `app/verify/facts.py` checks each entry against its own row: numbers,
+unit after each number, flag words, doctor line on low/high, no "you have".
+`tests/verifier_cases.json`: 23 wrong sentences all rejected, 9 correct ones all accepted.
+POST /reports/{token}/explain (409 while rows await review, 503 if the LLM is not
+configured). The explanation is not stored yet. Never run against the live API yet, so the
+real pass rate of the prompt is unknown.
 Progress report for humans: `docs/progress.md`.
 
 Task 1 on all 4 public samples (2026-10-07): wm17s 57 rows, z615 3 rows, drlogy 3 rows, hod
@@ -187,8 +202,7 @@ blank results, non-numeric urine results). No answer keys yet, so no accuracy nu
 Known safe refusals: "7-5 - 12.0" (typo in hod) and "150 - 410 x 10³/µL" (range followed
 by a multi-word unit) give flag "unknown".
 
-Not built: photo/scan path, LLM calls, verifier, API, deletion job, PDF output, glossary,
-prompts, answer keys for real files, side-by-side two-column layouts, wrapped test names,
+Not built: photo/scan path, verifier layer 2, cause text, translation, PDF output, glossary, answer keys for real files, side-by-side two-column layouts, wrapped test names,
 non-numeric results (for example "Negative", "G1").
 
 Known gotchas: Windows shell redirects change the encoding and break "µ" (use `--out`);

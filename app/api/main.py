@@ -13,13 +13,15 @@ import os
 import tempfile
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Callable, Literal, Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 
 from app.api.store import Store
 from app.extract.pdf_rows import TooManyPages, extract_pdf
+from app.llm.client import LLMClient, LLMError, default_client
+from app.llm.explain import explain
 from app.schema import Correction, Report, accept, correct, pending, reject
 
 MAX_BYTES = 10 * 1024 * 1024
@@ -38,7 +40,10 @@ class RowAction(BaseModel):
     correction: Optional[Correction] = None  # required when action is "correct"
 
 
-def create_app(store: Store) -> FastAPI:
+def create_app(store: Store, llm_factory: Callable[[], LLMClient] = default_client) -> FastAPI:
+    # Built on first use, so the server starts (and tests run) without an API key.
+    llm: dict[str, LLMClient] = {}
+
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         async def purge_loop():
@@ -115,6 +120,26 @@ def create_app(store: Store) -> FastAPI:
         if not store.update(token, report):
             raise HTTPException(404, "not found or expired")
         return _result(token, report)
+
+    @app.post("/reports/{token}/explain")
+    def explain_report(token: str) -> dict:
+        """Plain-English explanation of the usable rows, verified by code before it is sent.
+
+        If verification fails twice, "status" is "fallback" and only the values table is
+        returned. Rows still waiting for review must be decided first.
+        """
+        report = _load(token)
+        if pending(report):
+            raise HTTPException(409, "some rows still need review before an explanation")
+        if "client" not in llm:
+            try:
+                llm["client"] = llm_factory()
+            except LLMError as exc:
+                log.warning("llm not available: %s", exc)
+                raise HTTPException(503, "explanations are not available right now") from None
+        result = explain(report, llm["client"]).model_dump()
+        result.pop("failure")  # internal codes stay in the log
+        return {"token": token, "disclaimer": DISCLAIMER, "explanation": result}
 
     @app.delete("/reports/{token}", status_code=204)
     def delete_report(token: str) -> Response:

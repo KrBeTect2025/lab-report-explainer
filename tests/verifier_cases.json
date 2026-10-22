@@ -1,0 +1,47 @@
+{
+  "_about": "Synthetic rows and sentences for verifier layer 1 (task 6). Every 'reject' case must be rejected with the listed code; every 'accept' case must pass. No real patient data.",
+  "rows": {
+    "hb":    {"name": "Hemoglobin", "value": "11.2", "unit": "g/dL", "range_text": "13.0 - 17.0", "flag": "low"},
+    "plt":   {"name": "Platelet Count", "value": "2,50,000", "unit": "/cumm", "range_text": "1,50,000 - 4,10,000", "flag": "normal"},
+    "wbc":   {"name": "Total Leucocyte Count", "value": "12.5", "unit": "10^3/uL", "range_text": "4.0 - 11.0", "flag": "high"},
+    "mcv":   {"name": "MCV", "value": "88", "unit": "fL", "range_text": "83 - 101", "flag": "normal"},
+    "tsh":   {"name": "TSH", "value": "3.1", "unit": "uIU/mL", "range_text": "see note", "flag": "unknown"},
+    "ratio": {"name": "BUN/Creatinine Ratio", "value": "14", "unit": "", "range_text": "10 - 20", "flag": "normal"}
+  },
+  "accept": [
+    {"row": "hb", "why": "low value, range quoted, doctor line", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 g/dL, and the range printed on your report is 13.0 - 17.0. This is below the range printed on your report. Please discuss this with your doctor."},
+    {"row": "hb", "why": "trailing zero is the same number", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.20 g/dL. This is below the range printed on your report. Please discuss this with your doctor."},
+    {"row": "hb", "why": "spaces inside the unit", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 g / dL. This is below the range printed on your report. Please discuss this with your doctor."},
+    {"row": "plt", "why": "Indian digit grouping", "text": "Platelet Count tells how many platelets are in your blood. Your result is 2,50,000 /cumm. This is within the range printed on your report."},
+    {"row": "wbc", "why": "unit that contains digits", "text": "Total Leucocyte Count measures white blood cells. Your result is 12.5 10^3/uL, which is above the printed range of 4.0 - 11.0. Please discuss this with your doctor."},
+    {"row": "wbc", "why": "micro sign written as µ", "text": "Total Leucocyte Count measures white blood cells. Your result is 12.5 10^3/µL. This is above the range printed on your report. Please discuss this with your doctor."},
+    {"row": "mcv", "why": "normal value", "text": "MCV shows the average size of your red blood cells. Your result is 88 fL. This is within the range printed on your report."},
+    {"row": "tsh", "why": "unknown flag, no flag words", "text": "TSH is a hormone that helps control your thyroid gland. Your result is 3.1 uIU/mL. The range on your report could not be read, so this value was not compared."},
+    {"row": "ratio", "why": "row with no unit, name contains a slash", "text": "BUN/Creatinine Ratio compares two waste products in your blood. Your result is 14, and the printed range is 10 - 20. This is within the range printed on your report."}
+  ],
+  "reject": [
+    {"row": "hb", "kind": "wrong number", "code": "unknown_number", "text": "Hemoglobin carries oxygen in your blood. Your result is 12.2 g/dL. This is below the range printed on your report. Please discuss this with your doctor."},
+    {"row": "hb", "kind": "wrong number (lost decimal point)", "code": "unknown_number", "text": "Hemoglobin carries oxygen in your blood. Your result is 112 g/dL. This is below the range printed on your report. Please discuss this with your doctor."},
+    {"row": "hb", "kind": "wrong number in the range", "code": "unknown_number", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 g/dL and the range is 13.0 - 18.0. This is below the range printed on your report. Please discuss this with your doctor."},
+    {"row": "hb", "kind": "number from another row", "code": "unknown_number", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 g/dL, compared with 4.0. This is below the range printed on your report. Please discuss this with your doctor."},
+    {"row": "hb", "kind": "invented number", "code": "unknown_number", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 g/dL. About 2 in 10 people see this. This is below the range printed on your report. Please discuss this with your doctor."},
+    {"row": "mcv", "kind": "invented number", "code": "unknown_number", "text": "MCV shows the average size of your red blood cells. Your result is 88 fL. This is within the range printed on your report. Many people check it again in 3 months."},
+    {"row": "tsh", "kind": "invented number from another test name", "code": "unknown_number", "text": "TSH is a hormone that works with T3 in your body. Your result is 3.1 uIU/mL. The range on your report could not be read, so this value was not compared."},
+    {"row": "hb", "kind": "wrong unit", "code": "wrong_unit", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 mg/dL. This is below the range printed on your report. Please discuss this with your doctor."},
+    {"row": "mcv", "kind": "wrong unit", "code": "wrong_unit", "text": "MCV shows the average size of your red blood cells. Your result is 88 pg. This is within the range printed on your report."},
+    {"row": "mcv", "kind": "wrong unit (percent)", "code": "wrong_unit", "text": "MCV shows the average size of your red blood cells. Your result is 88 %. This is within the range printed on your report."},
+    {"row": "ratio", "kind": "unit added to a row with no unit", "code": "wrong_unit", "text": "BUN/Creatinine Ratio compares two waste products in your blood. Your result is 14 mg/dL. This is within the range printed on your report."},
+    {"row": "hb", "kind": "value without its unit", "code": "value_missing_or_without_unit", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2. This is below the range printed on your report. Please discuss this with your doctor."},
+    {"row": "mcv", "kind": "value left out", "code": "value_missing_or_without_unit", "text": "MCV shows the average size of your red blood cells. This is within the range printed on your report."},
+    {"row": "hb", "kind": "wrong flag word", "code": "flag_word_mismatch", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 g/dL. This is above the range printed on your report. Please discuss this with your doctor."},
+    {"row": "wbc", "kind": "wrong flag word", "code": "flag_word_mismatch", "text": "Total Leucocyte Count measures white blood cells. Your result is 12.5 10^3/uL. This is lower than the range printed on your report. Please discuss this with your doctor."},
+    {"row": "hb", "kind": "both flag words", "code": "flag_word_mismatch", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 g/dL. This is below the range printed on your report, not high. Please discuss this with your doctor."},
+    {"row": "mcv", "kind": "flag stated on a normal value", "code": "flag_word_mismatch", "text": "MCV shows the average size of your red blood cells. Your result is 88 fL. This is a little high."},
+    {"row": "plt", "kind": "flag stated on a normal value", "code": "flag_word_mismatch", "text": "Platelet Count tells how many platelets are in your blood. Your result is 2,50,000 /cumm. This is slightly raised but within the range printed on your report."},
+    {"row": "mcv", "kind": "abnormal said of a normal value", "code": "flag_word_mismatch", "text": "MCV shows the average size of your red blood cells. Your result is 88 fL. This result is abnormal."},
+    {"row": "tsh", "kind": "flag stated when the range is unreadable", "code": "flag_word_mismatch", "text": "TSH is a hormone that helps control your thyroid gland. Your result is 3.1 uIU/mL. This is within the range printed on your report."},
+    {"row": "hb", "kind": "flag not stated", "code": "flag_not_stated", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 g/dL. Please discuss this with your doctor."},
+    {"row": "hb", "kind": "doctor line missing on an abnormal value", "code": "doctor_line_missing", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 g/dL. This is below the range printed on your report."},
+    {"row": "hb", "kind": "diagnostic wording", "code": "diagnostic_wording", "text": "Hemoglobin carries oxygen in your blood. Your result is 11.2 g/dL. This is below the range printed on your report, so you have anaemia. Please discuss this with your doctor."}
+  ]
+}

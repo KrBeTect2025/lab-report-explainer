@@ -128,3 +128,50 @@ def test_too_many_pages_is_refused(tmp_path):
     client, _, _, _ = _setup(tmp_path)
     assert _upload(client, path.read_bytes()).status_code == 413
     assert not list((tmp_path / "store").iterdir())
+
+
+class _FakeLLM:
+    def __init__(self, answer):
+        self.answer, self.calls = answer, 0
+
+    def complete(self, system, user, schema):
+        self.calls += 1
+        return self.answer
+
+
+def test_explain_waits_for_review_then_returns_text_or_table(tmp_path):
+    import json
+
+    from app.llm.client import LLMError
+
+    clock = Clock()
+    store = Store(tmp_path / "store", now=clock)
+    generate(str(tmp_path / "syn"), per_template=1, seed=3)
+    pdf = sorted((tmp_path / "syn" / "pdf").glob("*.pdf"))[0].read_bytes()
+    llm = _FakeLLM(json.dumps({"rows": []}))  # wrong on purpose: every row is missing
+    client = TestClient(create_app(store, llm_factory=lambda: llm))
+    body = _upload(client, pdf).json()
+    token = body["token"]
+    for i in body["pending_review"]:
+        client.post(f"/reports/{token}/rows/{i}", json={"action": "accept"})
+    r = client.post(f"/reports/{token}/explain").json()
+    assert r["explanation"]["status"] == "fallback" and r["explanation"]["rows"] == []
+    assert r["explanation"]["table"] and "doctor" in r["disclaimer"]
+    assert "failure" not in r["explanation"]  # internal codes stay in the log
+    assert llm.calls == 2
+
+    # A row waiting for review blocks the explanation.
+    fix = {"name": "Odd Line", "value": 1, "unit": "", "range_text": ""}
+    client.post(f"/reports/{token}/rows/0", json={"action": "correct", "correction": fix})
+    report = store.load(token)
+    report.rows[0].confidence, report.rows[0].status = "low", "unreviewed"
+    store.update(token, report)
+    assert client.post(f"/reports/{token}/explain").status_code == 409
+
+    def no_key():
+        raise LLMError("CLAUDE_MODEL is not set")
+
+    unconfigured = TestClient(create_app(store, llm_factory=no_key))
+    client.post(f"/reports/{token}/rows/0", json={"action": "reject"})
+    assert unconfigured.post(f"/reports/{token}/explain").status_code == 503
+    assert client.post("/reports/" + "x" * 43 + "/explain").status_code == 404
